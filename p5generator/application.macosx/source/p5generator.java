@@ -45,7 +45,7 @@ public void setup() {
 
   pf = createFont("Verdana Bold", 30);
   cf = createFont("Verdana", 15); 
-  cp5.setControlFont(cf);
+//  cp5.setControlFont(cf);
 
   cp5.addTextfield("name")
 
@@ -86,24 +86,27 @@ public void setup() {
 
   cp5.addBang("locButton")
     .setPosition(440, 170)
-      .setSize(150, 40)
-        .setCaptionLabel("Location")
-          .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-            ;  
+      .setFont(cf)
+        .setSize(150, 40)
+          .setCaptionLabel("Location")
+            .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+              ;  
 
   cp5.addBang("p5Button")
     .setPosition(440, 240)
-      .setSize(150, 40)
-        .setCaptionLabel("P5.js Libraries")
-          .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-            ;
+      .setFont(cf)
+        .setSize(150, 40)
+          .setCaptionLabel("P5.js Libraries")
+            .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+              ;
 
   cp5.addBang("makeButton")
     .setPosition(20, 310)
-      .setSize(120, 40)
-        .setCaptionLabel("Make")
-          .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-            ;  
+      .setFont(cf)
+        .setSize(120, 40)
+          .setCaptionLabel("Make")
+            .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+              ;  
 
 
 
@@ -116,6 +119,11 @@ public void setup() {
 public void draw() {
   background(255);
   drawRainbow();
+
+  //  fill(255);
+  //  noStroke();
+  //  rect(436, 166, 158, 48);
+  //  rect(436, 236, 158, 48);
 
   textFont(pf);
   fill(0, 150);
@@ -195,7 +203,7 @@ public void makeButton() throws IOException {
   }
 
   //Check the folder is valid
-  if (Files.exists(Paths.get(loc))) {
+  if (!Files.exists(Paths.get(loc))) {
     satLoc = 64;
     notifications = "Please select a project folder";
     println("Needs a Location!");
