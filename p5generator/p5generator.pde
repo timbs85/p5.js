@@ -1,4 +1,4 @@
-// p5.js project generator by Tim Southorn 2017
+// p5.js project generator by Tim Southorn 2017 //<>//
 // www.timsouthorn.com
 
 
@@ -12,8 +12,8 @@ PFont pf, cf;
 
 ControlP5 cp5;
 String notifications = "";
-float rName = 0.0;  //Red values to warn user of missing entries
-float rLoc = 0.0;
+float satName = 0.0;  //Red values to warn user of missing entries
+float satLoc = 0.0;
 
 Path p5;
 
@@ -27,25 +27,41 @@ void setup() {
   cp5.setControlFont(cf);
 
   cp5.addTextfield("name")
+
     .setPosition(20, 100)
       .setSize(400, 40)
         .setFont(cf)
           .setFocus(true)
-            .setColor(color(255))
-              .setAutoClear(false)
-                .setCaptionLabel("Project Name")
-                  .getCaptionLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER).setPadding(20, 20)
-                    ;
+            .setColor(color(0, 200))
+              .setColorLabel(color(0))
+                .setAutoClear(false)
+                  .setCaptionLabel("Project Name")
+                    .getCaptionLabel().align(ControlP5.RIGHT_OUTSIDE, ControlP5.CENTER)
+                      .setPadding(35, 20)
+
+                        ;
 
   cp5.addTextfield("loc")
     .setPosition(20, 170)
       .setSize(400, 40)
         .setFont(cf)
           .setFocus(false)
-            .setColor(color(255))
+            .setColor(color(0, 200))
               .setAutoClear(false)
                 .getCaptionLabel().setVisible(false)
                   ;
+
+
+  cp5.addTextfield("p5")
+    .setPosition(20, 240)
+      .setSize(400, 40)
+        .setFont(cf)
+          .setFocus(false)
+            .setColor(color(0, 200))
+              .setColorBackground(color(255))
+                .setAutoClear(false)
+                  .getCaptionLabel().setVisible(false)
+                    ;
 
   cp5.addBang("locButton")
     .setPosition(440, 170)
@@ -53,16 +69,6 @@ void setup() {
         .setCaptionLabel("Location")
           .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
             ;  
-
-  cp5.addTextfield("p5")
-    .setPosition(20, 240)
-      .setSize(400, 40)
-        .setFont(cf)
-          .setFocus(false)
-            .setColor(color(255))
-              .setAutoClear(false)
-                .getCaptionLabel().setVisible(false)
-                  ;
 
   cp5.addBang("p5Button")
     .setPosition(440, 240)
@@ -73,12 +79,11 @@ void setup() {
 
   cp5.addBang("makeButton")
     .setPosition(20, 310)
-      .setSize(80, 40)
+      .setSize(120, 40)
         .setCaptionLabel("Make")
           .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
             ;  
 
-  textFont(cf);
 
 
   p5 = Paths.get(dataPath("") + "/empty-example/libraries/");
@@ -88,24 +93,27 @@ void setup() {
 }
 
 void draw() {
-  background(0);
+  background(255);
   drawRainbow();
 
   textFont(pf);
+  fill(0, 150);
   text("p5.js PROJECT GENERATOR", 25, 60);
-
   textFont(cf);
 
   //Flash empty fields red to warn user
-  if (rName > 0) {
-    rName -= 5;
+  if (satName > 0) {
+    satName -= 2.5;
   }
-  if (rLoc > 0) {
-    rLoc -= 5;
+  if (satLoc > 0) {
+    satLoc -= 2.5;
   }
-  cp5.get(Textfield.class, "name").setColorBackground(color(rName, 0, 0));
-  cp5.get(Textfield.class, "loc").setColorBackground(color(rLoc, 0, 0));
 
+  colorMode(HSB);
+  cp5.get(Textfield.class, "name").setColorBackground(color(1, satName, 255));
+  cp5.get(Textfield.class, "loc").setColorBackground(color(1, satLoc, 255));
+
+  fill(0, 220);
   text(notifications, 20, 380);
 }
 
@@ -157,17 +165,19 @@ void makeButton() throws IOException {
   //Check both fields have been filled
   String name = cp5.get(Textfield.class, "name").getText();
   String loc = cp5.get(Textfield.class, "loc").getText();
-  if (name.trim().length() <= 0 || loc.trim().length() <= 0) {
-    if (name.trim().length() <= 0) {
-      rName = 255;
-      notifications = "Please specify a project name";
-      println("Needs a name!");
-    }
-    if (loc.trim().length() <= 0) {
-      rLoc = 255;
-      notifications = "Please select a project folder";
-      println("Needs a Location!");
-    }
+
+  //Check if a name has been entered
+  if (name.trim().length() <= 0) {
+    satName = 64;
+    notifications = "Please specify a project name";
+    println("Needs a name!");
+  }
+
+  //Check the folder is valid
+  if (Files.exists(Paths.get(loc))) {
+    satLoc = 64;
+    notifications = "Please select a project folder";
+    println("Needs a Location!");
   }
 
   //Copy directory tree of empty P5.js example to specified location
@@ -176,8 +186,7 @@ void makeButton() throws IOException {
     final Path target = Paths.get(loc + "/" + name);
 
     Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
-      @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+      @Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
         Path targetdir = target.resolve(source.relativize(dir));
         try {
           Files.copy(dir, targetdir);
@@ -186,38 +195,131 @@ void makeButton() throws IOException {
           if (!Files.isDirectory(targetdir))
             throw e;
         }
+
         return FileVisitResult.CONTINUE;
       }
-      @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
+      @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
       {
         Files.copy(file, target.resolve(source.relativize(file)));
+        notifications = "New project created!";
         return FileVisitResult.CONTINUE;
       }
     }
     );
-    notifications = "New project created!";
   }
 }
 
+
+int r = 550;
+int rOff = 60;
+float angle = -173;
+float a = angle;
+float v, b, g, y, o;
+
 void drawRainbow() {
-  int r = 550;
-  int rOff = 60;
+  PVector mouse = new PVector(mouseX, mouseY);
+  PVector offset = new PVector(width + 40, height - 30);
+  float dist = offset.dist(mouse);
+
+
   pushMatrix();
   pushStyle();
-  translate(width, height);
-  strokeWeight(rOff/2);
+  translate(offset.x, offset.y);
+  colorMode(RGB);
   noFill();
-  stroke(150, 89, 167);
-  arc(0, 0, r, r, radians(-171), radians(-90));
+
+  strokeWeight(rOff/1.2);
+  stroke(214);
+  if (dist > 260 && dist < 290)
+    v = lerp(v, angle + 1, 0.3);
+  else
+    v = lerp(v, angle, 0.1);
+  arc(0, 0, r, r, radians(v-3), radians(-90));
+  if (dist > 230 && dist < 260)
+    b = lerp(b, angle + 1, 0.3);
+  else
+    b = lerp(b, angle, 0.1);
+  arc(0, 0, r - rOff, r - rOff, radians(b-7), radians(-90));
+  if (dist > 200 && dist < 230)
+    g = lerp(g, angle + 1, 0.3);
+  else
+    g = lerp(g, angle, 0.1);
+  arc(0, 0, r - rOff * 2, r - rOff * 2, radians(g-3), radians(-90));
+  if (dist > 170 && dist < 200)
+    y = lerp(y, angle + 1, 0.3);
+  else
+    y = lerp(y, angle, 0.1);
+  arc(0, 0, r - rOff * 3, r - rOff * 3, radians(y-5), radians(-90));
+  if (dist > 140 && dist < 170)
+    o = lerp(o, angle + 1, 0.3);
+  else
+    o = lerp(o, angle, 0.1);
+  arc(0, 0, r - rOff * 4, r - rOff * 4, radians(o-1), radians(-90));
+
+
+  strokeWeight(rOff/1.2);
+  stroke(255, 255, 255);
+  if (dist > 260 && dist < 290)
+    v = lerp(v, angle + 1, 0.3);
+  else
+    v = lerp(v, angle, 0.1);
+  arc(0, 0, r, r, radians(v-1), radians(-90));
+  if (dist > 230 && dist < 260)
+    b = lerp(b, angle + 1, 0.3);
+  else
+    b = lerp(b, angle, 0.1);
+  arc(0, 0, r - rOff, r - rOff, radians(b-5), radians(-90));
+  if (dist > 200 && dist < 230)
+    g = lerp(g, angle + 1, 0.3);
+  else
+    g = lerp(g, angle, 0.1);
+  arc(0, 0, r - rOff * 2, r - rOff * 2, radians(g-1), radians(-90));
+  if (dist > 170 && dist < 200)
+    y = lerp(y, angle + 1, 0.3);
+  else
+    y = lerp(y, angle, 0.1);
+  arc(0, 0, r - rOff * 3, r - rOff * 3, radians(y-2), radians(-90));
+  if (dist > 140 && dist < 170)
+    o = lerp(o, angle + 1, 0.3);
+  else
+    o = lerp(o, angle, 0.1);
+  arc(0, 0, r - rOff * 4, r - rOff * 4, radians(o+1), radians(-90));
+
+  if (dist > 260 && dist < 290)
+    v = lerp(v, angle + 1, 0.3);
+  else
+    v = lerp(v, angle, 0.1);
+  stroke(150, 89, 167);  
+  strokeWeight(rOff/2);
+  arc(0, 0, r, r, radians(v-1), radians(-90));
+
+  if (dist > 230 && dist < 260)
+    b = lerp(b, angle + 1, 0.3);
+  else
+    b = lerp(b, angle, 0.1);
   stroke(36, 148, 193);
-  arc(0, 0, r - rOff, r - rOff, radians(-173), radians(-90));
+  arc(0, 0, r - rOff, r - rOff, radians(b-3), radians(-90));
+
+  if (dist > 200 && dist < 230)
+    g = lerp(g, angle + 1, 0.3);
+  else
+    g = lerp(g, angle, 0.1);
   stroke(73, 187, 108);
-  arc(0, 0, r - rOff * 2, r - rOff * 2, radians(-169), radians(-90));
+  arc(0, 0, r - rOff * 2, r - rOff * 2, radians(g+1), radians(-90));
+
+  if (dist > 170 && dist < 200)
+    y = lerp(y, angle + 1, 0.3);
+  else
+    y = lerp(y, angle, 0.1);
   stroke(241, 197, 0);
-  arc(0, 0, r - rOff * 3, r - rOff * 3, radians(-171), radians(-90));
+  arc(0, 0, r - rOff * 3, r - rOff * 3, radians(y-1), radians(-90));
+
+  if (dist > 140 && dist < 170)
+    o = lerp(o, angle + 1, 0.3);
+  else
+    o = lerp(o, angle, 0.1);
   stroke(243, 89, 86);
-  arc(0, 0, r - rOff * 4, r - rOff * 4, radians(-168), radians(-90));
+  arc(0, 0, r - rOff * 4, r - rOff * 4, radians(o+2), radians(-90));
 
   popStyle();
   popMatrix();
